@@ -107,28 +107,28 @@ class TimeBarPainter extends ChartEngine {
     final paint = Paint()
       ..color = barColor ?? Theme.of(context).accentColor
       ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.square;
     final maxBottom = size.height;
+    final double radiusBar = 2;
 
     for (int index = 0; index < coordinates.length; index++) {
       final OffsetRange offsetRange = coordinates[index];
+
 
       final double left = paddingForAlignedBar + offsetRange.dx;
       final double right = paddingForAlignedBar + offsetRange.dx + barWidth;
       double top = offsetRange.topY;
       double bottom = offsetRange.bottomY;
 
-      Radius topRadius = barRadius;
-      Radius bottomRadius = barRadius;
+      Radius topRadius = Radius.circular(radiusBar);
+      Radius bottomRadius = Radius.circular(radiusBar);
 
       if (top < 0.0) {
-        _drawOutRangedBar(touchyCanvas, paint, size,
-            Rect.fromLTRB(left, top, right, bottom), offsetRange.data);
+        _drawOutRangedBar(touchyCanvas, paint, size, Rect.fromLTRB(left, top, right, bottom), offsetRange.data);
         top = 0.0;
         topRadius = Radius.zero;
       } else if (bottom > maxBottom) {
-        _drawOutRangedBar(touchyCanvas, paint, size,
-            Rect.fromLTRB(left, top, right, bottom), offsetRange.data);
+        _drawOutRangedBar(touchyCanvas, paint, size, Rect.fromLTRB(left, top, right, bottom), offsetRange.data);
         bottom = maxBottom;
         bottomRadius = Radius.zero;
       }
@@ -187,8 +187,7 @@ class TimeBarPainter extends ChartEngine {
     final int viewLimitDay = getViewModeLimitDay(viewMode);
 
     final scrollOffsetToDayCount = currentScrollOffsetToDay;
-    final DateTime startDateTime =
-        sleepData.first.end.add(Duration(days: -scrollOffsetToDayCount));
+    final DateTime startDateTime = sleepData.first.end.add(Duration(days: -scrollOffsetToDayCount));
     final int startIndex = indexOf(startDateTime, sleepData);
     // 1부터 시작한다.
     int dayCounter =

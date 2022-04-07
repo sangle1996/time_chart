@@ -99,8 +99,8 @@ abstract class TimeDataProcessor {
       _bottomHour = sleepTime.floor();
       return;
     }
-    _topHour = sleepPair.sleepTime.floor();
-    _bottomHour = sleepPair.wakeUp.ceil();
+    _topHour = 18; //SANGLE HARDCODE //sleepPair.sleepTime.floor();
+    _bottomHour = 18;//SANGLE HARDCODE //sleepPair.wakeUp.ceil();
     if (_topHour! % 2 != _bottomHour! % 2) {
       _topHour = hourDiffBetween(1, _topHour).toInt();
     }

@@ -121,12 +121,12 @@ class _TimeTooltipOverlay extends StatelessWidget {
     return translations.formatTimeOfDayWidget(
       a: Text(
         translations.dateFormat('a', dateTime),
-        style: subtitle1.copyWith(color: subtitle1.color!.withOpacity(0.5)),
+        // style: subtitle1.copyWith(color: subtitle1.color!.withOpacity(0.5)),
         textScaleFactor: 1.0,
       ),
       hMM: Text(
         translations.dateFormat('h:mm', dateTime),
-        style: textTheme.headline4!.copyWith(height: 1.1),
+        // style: textTheme.headline4!.copyWith(height: 1.1),
         textScaleFactor: 1.0,
       ),
     );

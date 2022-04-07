@@ -13,6 +13,8 @@ class TimeXLabelPainter extends ChartEngine {
     required DateTime firstValueDateTime,
     required int? dayCount,
     required this.firstDataHasChanged,
+    this.style,
+    this.showLine = true
   }) : super(
           scrollController: scrollController,
           context: context,
@@ -24,11 +26,13 @@ class TimeXLabelPainter extends ChartEngine {
 
   final ValueNotifier<double> scrollOffsetNotifier;
   final bool firstDataHasChanged;
+  final TextStyle? style;
+  final bool showLine;
 
   @override
   void paint(Canvas canvas, Size size) {
     setDefaultValue(size);
-    drawXLabels(canvas, size, firstDataHasChanged: firstDataHasChanged);
+    drawXLabels(canvas, size, firstDataHasChanged: firstDataHasChanged, style: style, showLine: showLine);
   }
 
   @override

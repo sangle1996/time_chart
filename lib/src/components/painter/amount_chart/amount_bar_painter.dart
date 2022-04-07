@@ -45,6 +45,8 @@ class AmountBarPainter extends ChartEngine {
       ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round;
 
+    final double radiusBar = 2;
+
     for (int index = 0; index < coordinates.length; index++) {
       final OffsetWithAmountDate offsetWithAmount = coordinates[index];
 
@@ -56,8 +58,8 @@ class AmountBarPainter extends ChartEngine {
 
       final rRect = RRect.fromRectAndCorners(
         Rect.fromLTRB(left, top, right, bottom),
-        topLeft: barRadius,
-        topRight: barRadius,
+        topLeft: Radius.circular(radiusBar),
+        topRight: Radius.circular(radiusBar),
       );
 
       final callback = (_) => tooltipCallback(

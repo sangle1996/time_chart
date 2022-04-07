@@ -10,6 +10,8 @@ class AmountYLabelPainter extends ChartEngine {
     required ViewMode viewMode,
     required this.topHour,
     required this.bottomHour,
+    this.style,
+    this.showLine = true
   }) : super(
           context: context,
           viewMode: viewMode,
@@ -17,6 +19,9 @@ class AmountYLabelPainter extends ChartEngine {
 
   final int? topHour;
   final int? bottomHour;
+  final TextStyle? style;
+
+  final bool showLine;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -34,8 +39,8 @@ class AmountYLabelPainter extends ChartEngine {
 
     for (int time = topHour!; time >= bottomHour!; --time) {
       drawYText(canvas, size,
-          time == bottomHour ? '0 $hourSuffix' : '$time $hourSuffix', posY);
-      if (topHour! > time && time > bottomHour!)
+          time == bottomHour ? '0 $hourSuffix' : '$time f$hourSuffix', posY, style: style);
+      if (topHour! > time && time > bottomHour! && showLine)
         drawHorizontalLine(canvas, size, posY);
 
       posY += interval;

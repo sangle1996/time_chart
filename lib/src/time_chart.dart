@@ -46,6 +46,14 @@ class TimeChart extends StatelessWidget {
     this.tooltipBackgroundColor,
     this.tooltipStart = "START",
     this.tooltipEnd = "END",
+    this.XlabelStyle,
+    this.YlabelStyle,
+    this.isSrollAble = true,
+    this.showHorizontal = true,
+    this.showVertical = true,
+    this.showBorder = true,
+    this.latestDay,
+    this.ignoreOdd = false,
     required this.viewMode,
   }) : super(key: key);
 
@@ -105,6 +113,22 @@ class TimeChart extends StatelessWidget {
   /// There is two type [ViewMode.weekly] and [ViewMode.monthly].
   final ViewMode viewMode;
 
+  final TextStyle? XlabelStyle;
+
+  final TextStyle? YlabelStyle;
+
+  final bool isSrollAble;
+
+  final bool showHorizontal;
+
+  final bool showVertical;
+
+  final bool showBorder;
+
+  final DateTime? latestDay;
+
+  final bool ignoreOdd;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (_, box) {
@@ -126,6 +150,13 @@ class TimeChart extends StatelessWidget {
           tooltipStart: tooltipStart,
           tooltipEnd: tooltipEnd,
           viewMode: viewMode,
+          XlabelStyle: XlabelStyle,
+          YlabelStyle: YlabelStyle,
+          showHorizontal: showHorizontal,
+          showVertical: showVertical,
+          showBorder: showBorder,
+          latestDay: latestDay,
+          ignoreOdd: ignoreOdd
         ),
       );
     });
@@ -146,6 +177,14 @@ class _Chart extends StatefulWidget {
     required this.tooltipStart,
     required this.tooltipEnd,
     required this.viewMode,
+    this.XlabelStyle,
+    this.YlabelStyle,
+    this.isSrollAble = true,
+    this.showHorizontal = true,
+    this.showVertical = true,
+    this.showBorder = true,
+    this.latestDay,
+    this.ignoreOdd = false
   }) : super(key: key);
 
   final ChartType chartType;
@@ -159,6 +198,14 @@ class _Chart extends StatefulWidget {
   final String tooltipStart;
   final String tooltipEnd;
   final ViewMode viewMode;
+  final TextStyle? XlabelStyle;
+  final TextStyle? YlabelStyle;
+  final bool isSrollAble;
+  final bool showHorizontal;
+  final bool showVertical;
+  final bool showBorder;
+  final DateTime? latestDay;
+  final bool ignoreOdd;
 
   @override
   _ChartState createState() => _ChartState();
@@ -328,6 +375,8 @@ class _ChartState extends State<_Chart>
     final chartType = amount == null ? ChartType.time : ChartType.amount;
     // 현재 위젯의 위치를 얻는다.
     final pivotOffset = ContextUtils.getOffsetFromContext(context)!;
+
+    final double rightMargin = _getRightMargin(context);
     // amount 가 null 이면 ChartType.time 이고, 아니면 ChartType.amount 이다.
     final Size tooltipSize =
         chartType == ChartType.time ? kTimeTooltipSize : kAmountTooltipSize;
@@ -345,11 +394,11 @@ class _ChartState extends State<_Chart>
     final top = max(candidateTop, 0.0);
 
     Direction direction = Direction.left;
-    double left = localLeft - tooltipSize.width - _tooltipPadding;
+    double left = localLeft - tooltipSize.width - _tooltipPadding + rightMargin;
     // 툴팁을 바의 오른쪽에 배치해야 하는 경우
     if (left < pivotOffset.dx) {
       direction = Direction.right;
-      left = localLeft + barWidth + _tooltipPadding;
+      left = localLeft + barWidth + _tooltipPadding + rightMargin;
     }
 
     return Positioned(
@@ -490,7 +539,7 @@ class _ChartState extends State<_Chart>
     return GestureDetector(
       onPanDown: _handlePanDown,
       child: Stack(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topRight,
         children: [
           // # #
           // # #
@@ -504,7 +553,7 @@ class _ChartState extends State<_Chart>
             builder: (context, topPosition) => CustomPaint(
               key: key,
               size: Size(totalWidth, double.infinity),
-              painter: _buildYLabelPainter(context, topPosition),
+              painter: _buildYLabelPainter(context, topPosition, style: widget.YlabelStyle),
             ),
           ),
           //-----
@@ -516,14 +565,14 @@ class _ChartState extends State<_Chart>
               clipBehavior: Clip.none,
               children: [
                 SizedBox(
-                  width: totalWidth - yLabelWidth,
+                  width: totalWidth - yLabelWidth, //Bring the Y Left
                   height: widget.height,
                 ),
-                const Positioned.fill(
+                widget.showBorder ? const Positioned.fill(
                   child: const CustomPaint(
                     painter: const BorderLinePainter(),
                   ),
-                ),
+                ) : Container(),
                 Positioned.fill(
                   child: NotificationListener<ScrollNotification>(
                     onNotification: _handleScrollNotification,
@@ -532,7 +581,7 @@ class _ChartState extends State<_Chart>
                       controller: _xLabelController,
                       child: CustomPaint(
                         size: innerSize,
-                        painter: _buildXLabelPainter(context),
+                        painter: _buildXLabelPainter(context, style: widget.XlabelStyle),
                       ),
                     ),
                   ),
@@ -548,7 +597,7 @@ class _ChartState extends State<_Chart>
             child: Stack(
               children: [
                 SizedBox(
-                  width: totalWidth - yLabelWidth,
+                  width: totalWidth - yLabelWidth, //Bring the Y Left
                   height: widget.height - kXLabelHeight,
                 ),
                 _buildAnimatedBox(
@@ -587,11 +636,12 @@ class _ChartState extends State<_Chart>
         reverse: true,
         scrollDirection: Axis.horizontal,
         controller: controller,
-        physics: CustomScrollPhysics(
-          itemDimension: _blockWidth!,
-          viewMode: widget.viewMode,
-          chartType: widget.chartType,
-        ),
+        physics: NeverScrollableScrollPhysics(),
+        // CustomScrollPhysics(
+        //   itemDimension: _blockWidth!,
+        //   viewMode: widget.viewMode,
+        //   chartType: widget.chartType,
+        // ),
         child: RepaintBoundary(
           key: key,
           child: child,
@@ -642,7 +692,8 @@ class _ChartState extends State<_Chart>
     );
   }
 
-  CustomPainter _buildYLabelPainter(BuildContext context, double topPosition) {
+  CustomPainter _buildYLabelPainter(BuildContext context, double topPosition,
+      {TextStyle? style}) {
     switch (widget.chartType) {
       case ChartType.time:
         return TimeYLabelPainter(
@@ -652,6 +703,9 @@ class _ChartState extends State<_Chart>
           bottomHour: bottomHour,
           chartHeight: widget.height,
           topPosition: topPosition,
+          style: style,
+          showLine: widget.showVertical,
+          ignoreOdd: widget.ignoreOdd
         );
       case ChartType.amount:
         return AmountYLabelPainter(
@@ -659,11 +713,14 @@ class _ChartState extends State<_Chart>
           viewMode: widget.viewMode,
           topHour: topHour,
           bottomHour: bottomHour,
+          style: style,
+          showLine: widget.showVertical
         );
     }
   }
 
-  CustomPainter _buildXLabelPainter(BuildContext context) {
+  CustomPainter _buildXLabelPainter(BuildContext context,
+      {TextStyle? style}) {
     switch (widget.chartType) {
       case ChartType.time:
         return TimeXLabelPainter(
@@ -671,9 +728,11 @@ class _ChartState extends State<_Chart>
           scrollOffsetNotifier: _scrollOffsetNotifier,
           context: context,
           viewMode: widget.viewMode,
-          firstValueDateTime: processedSleepData.first.end,
+          firstValueDateTime: widget.latestDay != null ? widget.latestDay! : processedSleepData.first.end,
           dayCount: dayCount,
           firstDataHasChanged: firstDataHasChanged,
+          style: style,
+          showLine: widget.showHorizontal
         );
       case ChartType.amount:
         return AmountXLabelPainter(
@@ -681,8 +740,10 @@ class _ChartState extends State<_Chart>
           scrollOffsetNotifier: _scrollOffsetNotifier,
           context: context,
           viewMode: widget.viewMode,
-          firstValueDateTime: processedSleepData.first.end,
+          firstValueDateTime: widget.latestDay != null ? widget.latestDay! : processedSleepData.first.end,
           dayCount: dayCount,
+          style: style,
+          showLine: widget.showHorizontal
         );
     }
   }

@@ -85,7 +85,7 @@ abstract class ChartEngine extends CustomPainter {
     return (scrollController!.offset / blockWidth!).floor();
   }
 
-  Radius get barRadius => const Radius.circular(6.0);
+  Radius get barRadius => const Radius.circular(2.0);
 
   /// 전체 그래프의 오른쪽 레이블이 들어갈 간격의 크기이다.
   double get rightMargin => _rightMargin;
@@ -119,10 +119,10 @@ abstract class ChartEngine extends CustomPainter {
   void drawBar(Canvas canvas, Size size, List<dynamic> coordinates);
 
   /// Y 축의 텍스트 레이블을 그린다.
-  void drawYText(Canvas canvas, Size size, String text, double y) {
+  void drawYText(Canvas canvas, Size size, String text, double y, {TextStyle? style}) {
     TextSpan span = TextSpan(
       text: text,
-      style: textTheme.bodyText2!.copyWith(color: kTextColor),
+      style: style != null ? style : textTheme.caption!.copyWith(color: kTextColor),
     );
 
     TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
@@ -131,7 +131,7 @@ abstract class ChartEngine extends CustomPainter {
     tp.paint(
       canvas,
       Offset(
-        size.width - _rightMargin + kYLabelMargin,
+        /*size.width Bring the Y Left - _rightMargin +*/ kYLabelMargin,
         y - textTheme.bodyText2!.fontSize! / 2,
       ),
     );
@@ -170,7 +170,9 @@ abstract class ChartEngine extends CustomPainter {
   void drawXLabels(
     Canvas canvas,
     Size size, {
-    bool firstDataHasChanged = false,
+      bool firstDataHasChanged = false,
+      TextStyle? style,
+      bool showLine = true
   }) {
     final weekday = getShortWeekdayList(context);
     final viewModeLimitDay = getViewModeLimitDay(viewMode);
@@ -178,7 +180,7 @@ abstract class ChartEngine extends CustomPainter {
         math.max(0, currentScrollOffsetToDay - toleranceDay);
     DateTime currentDate =
         firstValueDateTime!.add(Duration(days: -scrollOffsetToDay));
-
+    int length = 2;
     void turnOneBeforeDay() {
       currentDate = currentDate.add(const Duration(days: -1));
     }
@@ -191,7 +193,11 @@ abstract class ChartEngine extends CustomPainter {
 
       switch (viewMode) {
         case ViewMode.weekly:
-          text = weekday[currentDate.weekday % 7];
+          if (length != null && length > 0) {
+            text = weekday[currentDate.weekday % 7].replaceRange(length, weekday[currentDate.weekday % 7].length, '');
+          }else{
+            text = weekday[currentDate.weekday % 7];
+          }
           if (currentDate.weekday == DateTime.sunday) isDashed = false;
           turnOneBeforeDay();
           break;
@@ -204,16 +210,18 @@ abstract class ChartEngine extends CustomPainter {
 
       final dx = size.width - (i + 1) * blockWidth!;
 
-      _drawXText(canvas, size, text, dx);
-      _drawVerticalDivideLine(canvas, size, dx, isDashed);
+      _drawXText(canvas, size, text, dx, style: style);
+      if(showLine){
+       _drawVerticalDivideLine(canvas, size, dx, isDashed);
+      }
     }
   }
 
-  void _drawXText(Canvas canvas, Size size, String text, double dx) {
+  void _drawXText(Canvas canvas, Size size, String text, double dx, {TextStyle? style}) {
     TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: text,
-        style: textTheme.bodyText2!.copyWith(color: kTextColor),
+        style: style != null ? style : textTheme.bodyText2!.copyWith(color: kTextColor),
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
@@ -231,7 +239,7 @@ abstract class ChartEngine extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = kLineStrokeWidth;
 
-    canvas.drawLine(Offset(0, dy), Offset(size.width - rightMargin, dy), paint);
+    canvas.drawLine(Offset(rightMargin/1.5, dy), Offset(size.width/*size.width Bring the Y Left - rightMargin*/, dy), paint);
   }
 
   /// 분할하는 세로선을 그려준다.

@@ -12,6 +12,8 @@ class AmountXLabelPainter extends ChartEngine {
     required ViewMode viewMode,
     required DateTime firstValueDateTime,
     required int? dayCount,
+    this.style,
+    this.showLine = true
   }) : super(
           scrollController: scrollController,
           context: context,
@@ -22,11 +24,13 @@ class AmountXLabelPainter extends ChartEngine {
         );
 
   final ValueNotifier<double> scrollOffsetNotifier;
+  final TextStyle? style;
+  final bool showLine;
 
   @override
   void paint(Canvas canvas, Size size) {
     setDefaultValue(size);
-    drawXLabels(canvas, size);
+    drawXLabels(canvas, size, style: style, showLine: showLine);
   }
 
   @override
